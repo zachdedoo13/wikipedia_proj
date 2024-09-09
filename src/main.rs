@@ -10,8 +10,9 @@ pub type BErr = Box<dyn std::error::Error>;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+
    loop {
-      generate_list_of_pages(50)?;
+      generate_list_of_pages(100)?;
    }
 
    Ok(())
@@ -131,7 +132,7 @@ fn brute_force_page_list(sample_size: u32) -> Result<(), BErr> {
    Ok(())
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 struct Prog {
    pub count_pages: u32,
    pub count_entry: u32,
@@ -141,44 +142,27 @@ struct Prog {
 
 const BASE: &str = "https://en.wikipedia.org/";
 fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
-   let mut found = HashSet::<String>::new();
-
-
-   let mut count_pages: u32 = 0;
-   let mut count_entry: u32 = 0;
-   let mut latest = match fs::read_to_string("src/saved_data/page_list") {
-      Ok(str) => {
-         match from_str::<Prog>(str.as_str()) {
-            Ok(prog) => { count_entry = prog.count_entry; count_pages = prog.count_pages; prog.latest },
-            Err(_) => "w/index.php?title=Special:AllPages&from=Aa".to_string(),
-         }
-      },
-      Err(_) => "w/index.php?title=Special:AllPages&from=Aa".to_string(),
+   let mut prog = match fs::read_to_string("src/saved_data/page_list") {
+      Ok(str) => {from_str::<Prog>(str.as_str()).unwrap()}
+      Err(_) => { let mut prog = Prog::default(); prog.latest = "w/index.php?title=Special:AllPages&from=Aa".to_string(); prog}
    };
 
    let st = Instant::now();
-   let sv = count_entry;
+   let sv = prog.count_entry;
    for _ in 0..cutoff  {
-      let page = load_page(&(BASE.to_owned() + &*latest))?;
+      let page = load_page(&(BASE.to_owned() + &*prog.latest))?;
       let check = linked_page_iter(page)?;
-      latest = check.1;
-      count_entry += check.0.len() as u32;
-      count_pages += 1;
-      found.extend(check.0);
-      println!("count_pages -> {count_pages} | count_entry's -> {count_entry}")
+      prog.latest = check.1;
+      prog.count_entry += check.0.len() as u32;
+      prog.count_pages += 1;
+      prog.ser.set.extend(check.0);
+      println!("count_pages -> {} | count_entry's -> {}", prog.count_pages, prog.count_entry)
    }
    let et = st.elapsed();
-   let ev = count_entry - sv;
+   let ev = prog.count_entry - sv;
    println!("\n{ev} entry's in {et:?}");
 
    let st = Instant::now();
-
-   let prog = Prog {
-      count_pages,
-      count_entry,
-      latest,
-      ser: SerHash { set: found },
-   };
 
    let ser_prog = to_string_pretty(&prog)?;
    fs::write("src/saved_data/page_list", ser_prog).unwrap();
@@ -222,7 +206,7 @@ fn linked_page_iter(doc: Html) -> Result<(HashSet<String>, String), BErr> {
 }
 
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 struct SerHash {
    pub set: HashSet<String>,
 }
