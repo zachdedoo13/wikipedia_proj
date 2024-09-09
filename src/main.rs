@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::mem::size_of_val;
 use std::time::Instant;
 
 use reqwest;
@@ -25,7 +26,7 @@ fn size_test() -> Result<(), BErr> {
    println!("Data grabbing -> {:?}", st.elapsed());
 
    let data = std::fs::read_to_string("src/saved_data/page_list")?;
-   let deserialized: HashSet<String> = serde_json::from_str::<SerHash>(&data)?.set;
+   let deserialized: HashSet<String> = from_str::<SerHash>(&data)?.set;
 
    let st = Instant::now();
 
@@ -123,9 +124,9 @@ fn brute_force_page_list(sample_size: u32) -> Result<(), BErr> {
    }
 
    let ser_temp = SerHash { set: found };
-   let serialized = serde_json::to_string_pretty(&ser_temp)?;
+   let serialized = to_string_pretty(&ser_temp)?;
 
-   std::fs::write("src/saved_data/page_list", serialized).unwrap();
+   fs::write("src/saved_data/page_list", serialized).unwrap();
 
    println!("Average amount -> {stats}");
 
