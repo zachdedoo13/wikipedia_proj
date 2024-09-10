@@ -11,9 +11,8 @@ pub type BErr = Box<dyn std::error::Error>;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-
    loop {
-      generate_list_of_pages(100)?;
+      generate_list_of_pages(256)?;
    }
 
    Ok(())
