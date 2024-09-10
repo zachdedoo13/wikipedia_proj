@@ -24,10 +24,13 @@ impl Default for Prog {
    }
 }
 
+
+
+const FILE_PATH: &str = "src/saved_data/page_list.txt";
 /// generate a list of wikipedia pages form A -> Z
 pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
    // setup
-   let mut prog = timer!("Load file time", { read_load_or("src/saved_data/page_list", Prog::default) });
+   let mut prog = timer!("Load file time", { read_load_or(FILE_PATH, Prog::default) });
    let initial_entry_count = prog.count_entry;
    println!(); // new line for formating
 
@@ -57,7 +60,7 @@ pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
    });
 
    // log stats
-   let file_size_in_bytes = fs::metadata("src/saved_data/page_list")?.len();
+   let file_size_in_bytes = fs::metadata(FILE_PATH)?.len();
    let file_size_in_mb = (file_size_in_bytes as f64) / (1024.0 * 1024.0);
    println!("File size is {file_size_in_mb}mb");
 
