@@ -27,7 +27,7 @@ impl Default for Prog {
 /// generate a list of wikipedia pages form A -> Z
 pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
    // setup
-   let mut prog = timer!("Load time", { read_load_or("src/saved_data/page_list", Prog::default) });
+   let mut prog = timer!("Load file time", { read_load_or("src/saved_data/page_list", Prog::default) });
    let initial_entry_count = prog.count_entry;
    println!(); // new line for formating
 
@@ -40,7 +40,7 @@ pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
          prog.count_entry += new_entries.len() as u32;
          prog.count_pages += 1;
          prog.ser.set.extend(new_entries);
-         println!("count_pages -> {} | count_entry's -> {}", prog.count_pages, prog.count_entry);
+         println!("count_pages -> {} | count_entry's -> {} | Next page {}", prog.count_pages, prog.count_entry, prog.latest);
       }
    }).0;
 
@@ -91,7 +91,5 @@ fn linked_page_iter(doc: Html) -> Result<(HashSet<String>, String), BErr> {
        .find(|e| e.text().collect::<String>().starts_with("Next")).unwrap()
        .value().attr("href").unwrap().to_string();
 
-
-   println!("Next page {next_page_link}");
    Ok((found, next_page_link))
 }
