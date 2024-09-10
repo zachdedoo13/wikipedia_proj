@@ -1,11 +1,10 @@
 use std::collections::HashSet;
 use std::fs;
-use std::time::Instant;
 
 use scraper::{Html, Selector};
 use serde_json::to_string_pretty;
 
-use crate::{BErr, load_page, read_load_or, SerHash, timer_var, WIKI};
+use crate::{BErr, load_page, read_load_or, SerHash, timer, timer_var, WIKI};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Prog {
@@ -24,12 +23,15 @@ impl Default for Prog {
       }
    }
 }
-pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
-   /// setup
-   let mut prog = read_load_or("src/saved_data/page_list", Prog::default);
-   let initial_entry_count = prog.count_entry;
 
-   /// load pages until cutoff
+/// generate a list of wikipedia pages form A -> Z
+pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
+   // setup
+   let mut prog = timer!("Load time", { read_load_or("src/saved_data/page_list", Prog::default) });
+   let initial_entry_count = prog.count_entry;
+   println!(); // new line for formating
+
+   // load pages until cutoff
    let elapsed_time = timer_var!({
       for _ in 0..cutoff {
          let page = load_page(&(WIKI.to_owned() + &prog.latest))?;
@@ -42,24 +44,30 @@ pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
       }
    }).0;
 
-   /// display page load time
+   // display page load time
    let new_entries_count = prog.count_entry - initial_entry_count;
-   println!("\n{new_entries_count} entry's in {elapsed_time:?}");
+   let minutes_elapsed = elapsed_time.as_secs_f32() / 60.0;
+   let entry_per_min = new_entries_count as f32 / minutes_elapsed;
+   println!("\n{new_entries_count} entry's in {elapsed_time:?}, entry's_per_min = {entry_per_min}e/m");
 
-   let save_start_time = Instant::now();
-   let serialized_prog = to_string_pretty(&prog)?;
-   fs::write("src/saved_data/page_list", serialized_prog)?;
+   // save to disk
+   timer!("Save Time", {
+      let serialized_prog = to_string_pretty(&prog)?;
+      fs::write("src/saved_data/page_list", serialized_prog)?;
+   });
 
-   println!("Saved in {:?}", save_start_time.elapsed());
-
+   // log stats
    let file_size_in_bytes = fs::metadata("src/saved_data/page_list")?.len();
    let file_size_in_mb = (file_size_in_bytes as f64) / (1024.0 * 1024.0);
-   println!("File size is {file_size_in_mb}mb\n");
+   println!("File size is {file_size_in_mb}mb");
+
+   println!(); // new line for formating
 
    Ok(())
 }
 
-pub fn linked_page_iter(doc: Html) -> Result<(HashSet<String>, String), BErr> {
+/// internal function for generate_list_of_pages()
+fn linked_page_iter(doc: Html) -> Result<(HashSet<String>, String), BErr> {
    let body_selector = Selector::parse(".mw-redirect")?;
 
    let found: HashSet<String> = doc.select(&body_selector)
