@@ -19,7 +19,7 @@ const WIKI: &str = "https://en.wikipedia.org/";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
    loop {
-      generate_list_of_pages(512)?;
+      generate_list_of_pages(216)?;
    }
 }
 
