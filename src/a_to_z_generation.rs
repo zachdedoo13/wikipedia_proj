@@ -7,7 +7,7 @@ use serde_json::to_string_pretty;
 use crate::{BErr, load_page, read_load_or, SerHash, timer, timer_var, WIKI};
 
 #[derive(serde::Serialize, serde::Deserialize)]
-struct Prog {
+pub struct Prog {
    pub count_pages: u32,
    pub count_entry: u32,
    pub latest: String,
