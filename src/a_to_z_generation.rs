@@ -56,7 +56,7 @@ pub fn generate_list_of_pages(cutoff: usize) -> Result<(), BErr> {
    // save to disk
    timer!("Save Time", {
       let serialized_prog = to_string_pretty(&prog)?;
-      fs::write("src/saved_data/page_list", serialized_prog)?;
+      fs::write(FILE_PATH, serialized_prog)?;
    });
 
    // log stats
