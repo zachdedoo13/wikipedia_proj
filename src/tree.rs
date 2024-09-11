@@ -1,16 +1,18 @@
 #![allow(dead_code)]
 
 use std::collections::{HashMap, HashSet};
+
 use scraper::{Html, Selector};
+
 use crate::{BErr, load_page};
 
-fn load_wiki_page(name: String) -> Result<(String, Html), BErr> {
+pub fn load_wiki_page(name: String) -> Result<(String, Html), BErr> {
    let url = "https://en.wikipedia.org/wiki/".to_owned() + &*name;
    let passer = load_page(&url)?;
    Ok((name, passer))
 }
 
-fn find_links_in_page(loaded: (String, Html)) -> Result<Page, BErr> {
+pub fn find_links_in_page(loaded: (String, Html)) -> Result<Page, BErr> {
    let contents_selector = Selector::parse("#mw-content-text")?;
 
    let doc = loaded.1;
@@ -35,17 +37,17 @@ fn find_links_in_page(loaded: (String, Html)) -> Result<Page, BErr> {
    Ok(Page(loaded.0, found))
 }
 
-fn processes_page<T: Into<String>>(name: T) -> Result<Page, BErr> {
+pub fn processes_page<T: Into<String>>(name: T) -> Result<Page, BErr> {
    let loaded = load_wiki_page(name.into())?;
    let page = find_links_in_page(loaded)?;
    Ok(page)
 }
 
 #[derive(Debug)]
-struct Page(String, HashSet<String>);
+pub struct Page(String, HashSet<String>);
 
 #[derive(Default, Debug)]
-struct WikiTree {
+pub struct WikiTree {
    pub pages: HashMap<String, HashSet<String>>,
 }
 impl WikiTree {
